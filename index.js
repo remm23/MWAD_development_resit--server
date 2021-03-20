@@ -1,5 +1,22 @@
 const express = require('express');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
+
+// database code
+const sqlite3 = require('sqlite3').verbose();
+const testDB = new sqlite3.Database('./db/test.db', err => {
+	if (err) { return console.error('Connection error:',err.message)};
+	console.log('Connected to test database');
+});
+
+// Create tables in database
+testDB.run('CREATE TABLE IF NOT EXISTS cats (id INT, name TEXT, type TEXT);');
+testDB.run('CREATE TABLE IF NOT EXISTS users (id INT, email TEXT, password TEXT);');
+const columns = '(id INT, firstname TEXT, lastname TEXT,' +
+' username TEXT, company TEXT, address TEXT, postcode TEXT);';
+testDB.run('CREATE TABLE IF NOT EXISTS Customers ' + columns);
+
+
+
 
 const app = express();
 app.use(bodyParser.urlencoded({extended: true}));
@@ -20,15 +37,33 @@ app.post('/login', (req,res) => {
 	} else {
 		res.redirect('http://localhost:3000/')
 	}
-})
+});
 
 // post request to sign new user up
 app.post('/signup', (req, res) => {
-	console.log("signed up new user", req.body);
+	console.log("signed up new users email", req.body.email);
+	testDB.run(`INSERT INTO users (email, password) VALUES ('${req.body.email}', '${req.body.password}');`);
 	res.redirect('http://localhost:3000/store');
-})
+});
 
 
 app.listen(port,() => {
 	console.log(`Listening at http://localhost:${port}`);
 });
+
+app.get('/leave', (req, res) => {
+	testDB.close(err => {
+		if (err) { return console.error('Close connection error',err.message) };
+		console.log('Closed connection to database');
+	});
+});
+
+//close connection to database
+
+
+
+
+
+
+
+
