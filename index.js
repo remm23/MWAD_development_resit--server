@@ -11,8 +11,10 @@ const testDB = new sqlite3.Database('./db/test.db', err => {
 // Create tables in database
 testDB.run('CREATE TABLE IF NOT EXISTS cats (id INT, name TEXT, type TEXT);');
 testDB.run('CREATE TABLE IF NOT EXISTS users (id INT, email TEXT, password TEXT);');
+
 const columns = '(id INT, firstname TEXT, lastname TEXT,' +
-' username TEXT, company TEXT, address TEXT, postcode TEXT);';
+' username TEXT, email TEXT, password TEXT, company TEXT,' +
+' address TEXT, postcode TEXT);';
 testDB.run('CREATE TABLE IF NOT EXISTS Customers ' + columns);
 
 
@@ -41,8 +43,18 @@ app.post('/login', (req,res) => {
 
 // post request to sign new user up
 app.post('/signup', (req, res) => {
-	console.log("signed up new users email", req.body.email);
-	testDB.run(`INSERT INTO users (email, password) VALUES ('${req.body.email}', '${req.body.password}');`);
+	const randomID = Math.floor(Math.random() * 100000000);
+	const user = req.body;
+	const username = user.firstname + randomID;
+	console.log("signed up new users email", req.body);
+
+	// testDB.run(`INSERT INTO users (email, password) VALUES ('${req.body.email}', '${req.body.password}');`);
+
+	testDB.run(`INSERT INTO Customers 
+	(id, firstname, lastname, username, email, password, company, address, postcode)
+	VALUES ('${randomID}', '${user.firstname}', '${user.lastname}', '${username}',
+	 '${user.email}', '${user.password}', '${user.company}', '${user.address}', '${user.postcode}')`
+	);
 	res.redirect('http://localhost:3000/store');
 });
 
