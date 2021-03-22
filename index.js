@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 // database code
 const sqlite3 = require('sqlite3').verbose();
@@ -17,28 +18,33 @@ const columns = '(id INT, firstname TEXT, lastname TEXT,' +
 ' address TEXT, postcode TEXT);';
 testDB.run('CREATE TABLE IF NOT EXISTS Customers ' + columns);
 
-
-
-
 const app = express();
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cors());
 const port = 4000;
 
 app.get('/', (req,res) => {
 	res.send('Hello World!');
 });
 
+app.get('/customers', (req,res) => {
+	testDB.all('SELECT * FROM Customers', (err,rows) => {
+		let customers = [];
+		if (err) {
+			return res.sendStatus(400);
+		}
+		rows.forEach(row => 
+			customers.push(row)
+		)
+		res.send(customers);
+	})
+});
+
 // post request from login
 app.post('/login', (req,res) => {
 	console.log('Got body', req.body);
 	// redirect to route base on user and password
-	if (req.body.email == "joeblogs@icloud.com" && req.body.password == "apple") {
-		res.redirect('http://localhost:3000/management')
-	} else if (req.body.email == "janedoe@googlemail.com" && req.body.password == "google") {
-		res.redirect('http://localhost:3000/store')
-	} else {
-		res.redirect('http://localhost:3000/')
-	}
+	
 });
 
 // post request to sign new user up
@@ -48,8 +54,6 @@ app.post('/signup', (req, res) => {
 	const username = user.firstname + randomID;
 	console.log("signed up new users email", req.body);
 
-	// testDB.run(`INSERT INTO users (email, password) VALUES ('${req.body.email}', '${req.body.password}');`);
-
 	testDB.run(`INSERT INTO Customers 
 	(id, firstname, lastname, username, email, password, company, address, postcode)
 	VALUES ('${randomID}', '${user.firstname}', '${user.lastname}', '${username}',
@@ -58,11 +62,11 @@ app.post('/signup', (req, res) => {
 	res.redirect('http://localhost:3000/store');
 });
 
-
 app.listen(port,() => {
 	console.log(`Listening at http://localhost:${port}`);
 });
 
+//close connection to database
 app.get('/leave', (req, res) => {
 	testDB.close(err => {
 		if (err) { return console.error('Close connection error',err.message) };
@@ -70,7 +74,6 @@ app.get('/leave', (req, res) => {
 	});
 });
 
-//close connection to database
 
 
 
